@@ -83,7 +83,7 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 		ee.set("request.header."+k, strings.Join(h, ","))
 	}
 }
-func (ee *ElasticEntry) SetResponse(status int, body string) {
+func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
 	ee.set("response.body", body)
 	ee.set("response.status", status)
 	ee.set("duration", fmt.Sprintf("%vms", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns
