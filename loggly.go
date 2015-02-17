@@ -55,7 +55,7 @@ type LogglyEntry struct {
 		Header http.Header
 	}
 	Response struct {
-		Body     string
+		Body     interface{}
 		Status   int
 		Duration string
 	}
@@ -83,7 +83,7 @@ func (le *LogglyEntry) SetRequest(req *http.Request) {
 		req.Body = ioutil.NopCloser(b)
 	}
 }
-func (le *LogglyEntry) SetResponse(status int, body string) {
+func (le *LogglyEntry) SetResponse(status int, body interface{}) {
 	le.Response.Body = body
 	le.Response.Status = status
 	le.Response.Duration = fmt.Sprintf("%vms", time.Since(le.startTime).Nanoseconds()/1000000) //1 ms = 1000000ns
