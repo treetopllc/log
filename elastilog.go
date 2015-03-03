@@ -15,12 +15,14 @@ import (
 
 type ElasticClient struct {
 	Basic
+	debug  bool
 	client elastilog.Client
 }
 
-func NewElastic(uri string, tags ...string) *ElasticClient {
+func NewElastic(uri string, debug bool, tags ...string) *ElasticClient {
 	c := &ElasticClient{
 		client: elastilog.NewClient(uri, tags...),
+		debug:  debug,
 	}
 	c.Basic = NewBasic(c, "", 0)
 	return c
@@ -28,9 +30,15 @@ func NewElastic(uri string, tags ...string) *ElasticClient {
 
 func (el ElasticClient) Send(e *ElasticEntry) {
 	if e != nil {
-		e.entry.Attributes["level"] = string(e.level)
-		e.entry.Log = string(e.str)
-		el.client.Send(e.entry)
+		go func() {
+			e.entry.Attributes["level"] = string(e.level)
+			e.entry.Log = string(e.str)
+			if !el.debug {
+				delete(e.entry.Attributes, "response.body")
+				e.entry.Attributes["request.body"] = filterRequest(e.entry.Attributes["request.body"])
+			}
+			el.client.Send(e.entry)
+		}()
 	}
 }
 
@@ -63,7 +71,7 @@ func NewElasticEntry() *ElasticEntry {
 	}
 }
 
-func (ee *ElasticEntry) set(key string, value interface{}) {
+func (ee *ElasticEntry) set(key string, value string) {
 	ee.entry.Attributes[key] = value
 }
 
@@ -84,9 +92,9 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 	}
 }
 func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
-	ee.set("response.body", body)
-	ee.set("response.status", status)
-	ee.set("duration", fmt.Sprintf("%vms", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns
+	ee.set("response.body", fmt.Sprintf("%s ", body))
+	ee.set("response.status", fmt.Sprintf("%v", status))
+	ee.set("duration", fmt.Sprintf("%v", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns
 }
 
 func (ee *ElasticEntry) Log(msg ...interface{}) {
