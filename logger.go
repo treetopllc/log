@@ -8,3 +8,9 @@ type Logger interface {
 	Panic(interface{})
 	Panicf(string, ...interface{})
 }
+
+var debug bool = false
+
+func SetDebug(v bool) {
+	debug = v
+}

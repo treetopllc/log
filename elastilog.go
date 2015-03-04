@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,14 +16,12 @@ import (
 
 type ElasticClient struct {
 	Basic
-	debug  bool
 	client elastilog.Client
 }
 
-func NewElastic(uri string, debug bool, tags ...string) *ElasticClient {
+func NewElastic(uri string, tags ...string) *ElasticClient {
 	c := &ElasticClient{
 		client: elastilog.NewClient(uri, tags...),
-		debug:  debug,
 	}
 	c.Basic = NewBasic(c, "", 0)
 	return c
@@ -30,15 +29,9 @@ func NewElastic(uri string, debug bool, tags ...string) *ElasticClient {
 
 func (el ElasticClient) Send(e *ElasticEntry) {
 	if e != nil {
-		go func() {
-			e.entry.Attributes["level"] = string(e.level)
-			e.entry.Log = string(e.str)
-			if !el.debug {
-				delete(e.entry.Attributes, "response.body")
-				e.entry.Attributes["request.body"] = filterRequest(e.entry.Attributes["request.body"])
-			}
-			el.client.Send(e.entry)
-		}()
+		e.entry.Attributes["level"] = string(e.level)
+		e.entry.Log = string(e.str)
+		el.client.Send(e.entry)
 	}
 }
 
@@ -84,7 +77,11 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 	if req.Body != nil {
 		b := new(bytes.Buffer)
 		io.Copy(b, req.Body)
-		ee.set("request.body", string(b.Bytes()))
+		rb := b.String()
+		if !debug {
+			rb = filterRequest(rb)
+		}
+		ee.set("request.body", rb+" ")
 		req.Body = ioutil.NopCloser(b)
 	}
 	for k, h := range req.Header {
@@ -92,7 +89,10 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 	}
 }
 func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
-	ee.set("response.body", fmt.Sprintf("%s ", body))
+	if debug {
+		b, _ := json.Marshal(body)
+		ee.set("response.body", fmt.Sprintf("%s ", string(b)))
+	}
 	ee.set("response.status", fmt.Sprintf("%v", status))
 	ee.set("duration", fmt.Sprintf("%v", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns
 }

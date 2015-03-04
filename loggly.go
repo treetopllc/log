@@ -14,14 +14,12 @@ import (
 
 type LogglyClient struct {
 	Basic
-	debug  bool
 	client loggly.Client
 }
 
-func NewLogglyClient(token string, debug bool, tags ...string) *LogglyClient {
+func NewLogglyClient(token string, tags ...string) *LogglyClient {
 	c := &LogglyClient{
 		client: loggly.NewClient(token, tags...),
-		debug:  debug,
 	}
 	c.Basic = NewBasic(c, "", 0)
 	return c
@@ -29,18 +27,12 @@ func NewLogglyClient(token string, debug bool, tags ...string) *LogglyClient {
 
 func (lc *LogglyClient) Send(e *LogglyEntry) {
 	if e != nil {
-		go func() {
-			if !lc.debug {
-				e.Response.Body = nil
-				e.Request.Body = filterRequest(e.Request.Body)
-			}
-			b, err := json.Marshal(e) //no fields here can json err
-			if err != nil {
-				fmt.Println("Error sending to loggly: ", err)
-			} else {
-				lc.Write(b)
-			}
-		}()
+		b, err := json.Marshal(e) //no fields here can json err
+		if err != nil {
+			fmt.Println("Error sending to loggly: ", err)
+		} else {
+			lc.Write(b)
+		}
 	}
 }
 
@@ -87,12 +79,18 @@ func (le *LogglyEntry) SetRequest(req *http.Request) {
 	if req.Body != nil {
 		b := new(bytes.Buffer)
 		io.Copy(b, req.Body)
-		le.Request.Body = b.String()
+		rb := b.String()
+		if !debug {
+			rb = filterRequest(rb)
+		}
+		le.Request.Body = rb
 		req.Body = ioutil.NopCloser(b)
 	}
 }
 func (le *LogglyEntry) SetResponse(status int, body interface{}) {
-	le.Response.Body = body
+	if debug {
+		le.Response.Body = body
+	}
 	le.Response.Status = status
 	le.Response.Duration = time.Since(le.startTime).Nanoseconds() / 1000000 //1 ms = 1000000ns
 }

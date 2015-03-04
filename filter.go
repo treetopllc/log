@@ -2,13 +2,10 @@ package log
 
 import "strings"
 
-var blacklisted = []string{
-	"email",
-	"postal_code",
-	"password",
-	"birthdate",
-	"gender",
-	"last_name",
+var blacklisted []string
+
+func Blacklist(strs ...string) {
+	blacklisted = append(blacklisted, strs...)
 }
 
 func filterRequest(body string) string {
