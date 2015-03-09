@@ -95,6 +95,11 @@ func (le *LogglyEntry) SetResponse(status int, body interface{}) {
 	le.Response.Duration = time.Since(le.startTime).Nanoseconds() / 1000000 //1 ms = 1000000ns
 }
 
+func (le *LogglyEntry) Write(b []byte) (int, error) {
+	le.Level.Set(INFO)
+	le.Logs.Log(string(b))
+	return len(b), nil
+}
 func (le *LogglyEntry) Log(msg ...interface{}) {
 	le.Level.Set(INFO)
 	le.Logs.Log(msg...)

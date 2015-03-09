@@ -97,9 +97,14 @@ func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
 	ee.set("duration", fmt.Sprintf("%v", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns
 }
 
+func (ee *ElasticEntry) Write(b []byte) (int, error) {
+	ee.level.Set(INFO)
+	ee.str.Log(string(b))
+	return len(b), nil
+}
 func (ee *ElasticEntry) Log(msg ...interface{}) {
 	ee.level.Set(INFO)
-	ee.str.Log(msg)
+	ee.str.Log(msg...)
 }
 func (ee *ElasticEntry) Logf(msg string, args ...interface{}) {
 	ee.level.Set(INFO)

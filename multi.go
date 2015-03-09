@@ -1,6 +1,9 @@
 package log
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 type Multi []Logger
 
@@ -15,7 +18,13 @@ func (m *Multi) Add(ll ...Logger) {
 		}
 	}
 }
-
+func (m Multi) Write(b []byte) (int, error) {
+	ws := make([]io.Writer, 0, len(m))
+	for _, l := range m {
+		ws = append(ws, l)
+	}
+	return io.MultiWriter(ws...).Write(b)
+}
 func (m Multi) Log(msg ...interface{}) {
 	for _, l := range m {
 		l.Log(msg...)

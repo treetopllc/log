@@ -33,7 +33,10 @@ func NewBasic(out io.Writer, prefix string, flags ...int) Basic {
 	}
 	return Basic{log.New(out, prefix, flag)}
 }
-
+func (b Basic) Write(bt []byte) (int, error) {
+	b.inner.Print(string(bt))
+	return len(bt), nil
+}
 func (b Basic) Log(msg ...interface{}) {
 	b.inner.Print(msg...)
 }

@@ -8,6 +8,10 @@ func (s *StringLogger) addline(str string) {
 	*s += StringLogger(str + "\n")
 }
 
+func (s *StringLogger) Write(b []byte) (int, error) {
+	s.addline(string(b))
+	return len(b), nil
+}
 func (s *StringLogger) Log(msg ...interface{}) {
 	s.addline(fmt.Sprint(msg...))
 }

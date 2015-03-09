@@ -7,6 +7,7 @@ type Logger interface {
 	Errorf(string, ...interface{})
 	Panic(interface{})
 	Panicf(string, ...interface{})
+	Write([]byte) (int, error)
 }
 
 var debug bool = false
