@@ -88,6 +88,9 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 		ee.set("request.header."+k, strings.Join(h, ","))
 	}
 }
+func (ee *ElasticEntry) SetUserID(id string) {
+	ee.set("request.user_id", id)
+}
 func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
 	if debug {
 		b, _ := json.Marshal(body)

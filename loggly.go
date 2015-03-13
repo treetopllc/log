@@ -53,6 +53,7 @@ type LogglyEntry struct {
 		Query  string
 		Body   string
 		Header http.Header
+		UserID string
 	}
 	Response struct {
 		Body     interface{}
@@ -86,6 +87,9 @@ func (le *LogglyEntry) SetRequest(req *http.Request) {
 		le.Request.Body = rb
 		req.Body = ioutil.NopCloser(b)
 	}
+}
+func (le *LogglyEntry) SetUserID(id string) {
+	le.Request.UserID = id
 }
 func (le *LogglyEntry) SetResponse(status int, body interface{}) {
 	if debug {
