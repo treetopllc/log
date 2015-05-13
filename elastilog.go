@@ -91,10 +91,16 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 func (ee *ElasticEntry) SetUserID(id string) {
 	ee.set("request.user_id", id)
 }
+
 func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
-	if debug {
-		b, _ := json.Marshal(body)
-		ee.set("response.body", fmt.Sprintf("%s ", string(b)))
+	if debug || status >= 300 {
+		switch body := body.(type) {
+		case string:
+			ee.set("response.body", fmt.Sprintf("%s ", body))
+		default:
+			b, _ := json.Marshal(body)
+			ee.set("response.body", fmt.Sprintf("%s ", string(b)))
+		}
 	}
 	ee.set("response.status", fmt.Sprintf("%v", status))
 	ee.set("duration", fmt.Sprintf("%v", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns
