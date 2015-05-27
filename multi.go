@@ -58,7 +58,7 @@ func (m Multi) Panicf(msg string, args ...interface{}) {
 	for _, l := range m {
 		func() {
 			defer recover() //Anywhere else this would be evil
-			l.Panic(msg)
+			l.Panicf(msg, args...)
 		}()
 	}
 	panic(fmt.Sprintf(msg, args...))
