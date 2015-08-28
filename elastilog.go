@@ -1,11 +1,7 @@
 package log
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -75,14 +71,8 @@ func (ee *ElasticEntry) SetRequest(req *http.Request) {
 	ee.set("request.query", req.URL.RawQuery)
 	ee.set("request.proto", req.Proto)
 	if req.Body != nil {
-		b := new(bytes.Buffer)
-		io.Copy(b, req.Body)
-		rb := b.String()
-		if !debug {
-			rb = filterRequest(rb)
-		}
+		rb := requestBody(req)
 		ee.set("request.body", rb+" ")
-		req.Body = ioutil.NopCloser(b)
 	}
 	for k, h := range req.Header {
 		ee.set("request.header."+k, strings.Join(h, ","))
@@ -94,13 +84,7 @@ func (ee *ElasticEntry) SetUserID(id string) {
 
 func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
 	if debug || status >= 300 {
-		switch body := body.(type) {
-		case string:
-			ee.set("response.body", fmt.Sprintf("%s ", body))
-		default:
-			b, _ := json.Marshal(body)
-			ee.set("response.body", fmt.Sprintf("%s ", string(b)))
-		}
+		ee.set("response.body", responseBody(body))
 	}
 	ee.set("response.status", fmt.Sprintf("%v", status))
 	ee.set("duration", fmt.Sprintf("%v", time.Since(ee.entry.Timestamp).Nanoseconds()/1000000)) //1 ms = 1000000ns

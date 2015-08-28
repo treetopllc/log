@@ -1,11 +1,8 @@
 package log
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -78,14 +75,7 @@ func (le *LogglyEntry) SetRequest(req *http.Request) {
 	le.Request.Query = req.URL.RawQuery
 	le.Request.Header = req.Header
 	if req.Body != nil {
-		b := new(bytes.Buffer)
-		io.Copy(b, req.Body)
-		rb := b.String()
-		if !debug {
-			rb = filterRequest(rb)
-		}
-		le.Request.Body = rb
-		req.Body = ioutil.NopCloser(b)
+		le.Request.Body = requestBody(req)
 	}
 }
 func (le *LogglyEntry) SetUserID(id string) {
@@ -93,7 +83,7 @@ func (le *LogglyEntry) SetUserID(id string) {
 }
 func (le *LogglyEntry) SetResponse(status int, body interface{}) {
 	if debug {
-		le.Response.Body = body
+		le.Response.Body = responseBody(body)
 	}
 	le.Response.Status = status
 	le.Response.Duration = time.Since(le.startTime).Nanoseconds() / 1000000 //1 ms = 1000000ns
