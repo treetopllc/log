@@ -84,6 +84,9 @@ func (ee *ElasticEntry) SetUserID(id string) {
 func (ee *ElasticEntry) SetProductType(pt string) {
 	ee.set("request.product_type", pt)
 }
+func (ee *ElasticEntry) SetRequestID(id string) {
+	ee.set("request.id", id)
+}
 
 func (ee *ElasticEntry) SetResponse(status int, body interface{}) {
 	if debug || status >= 300 {
