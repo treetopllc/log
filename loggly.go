@@ -43,14 +43,15 @@ type LogglyEntry struct {
 	Level LogLevel
 
 	Request struct {
-		Proto  string
-		Method string
-		Host   string
-		Path   string
-		Query  string
-		Body   string
-		Header http.Header
-		UserID string
+		Proto       string
+		Method      string
+		Host        string
+		Path        string
+		Query       string
+		Body        string
+		Header      http.Header
+		UserID      string
+		ProductType string
 	}
 	Response struct {
 		Body     interface{}
@@ -87,6 +88,10 @@ func (le *LogglyEntry) SetResponse(status int, body interface{}) {
 	}
 	le.Response.Status = status
 	le.Response.Duration = time.Since(le.startTime).Nanoseconds() / 1000000 //1 ms = 1000000ns
+}
+
+func (le *LogglyEntry) SetProductType(pt string) {
+	le.Request.ProductType = pt
 }
 
 func (le *LogglyEntry) Write(b []byte) (int, error) {
