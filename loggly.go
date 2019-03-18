@@ -83,7 +83,7 @@ func (le *LogglyEntry) SetUserID(id string) {
 	le.Request.UserID = id
 }
 func (le *LogglyEntry) SetResponse(status int, body interface{}) {
-	if debug {
+	if debug || status >= 300 {
 		le.Response.Body = responseBody(body)
 	}
 	le.Response.Status = status
