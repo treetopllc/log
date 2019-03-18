@@ -55,6 +55,7 @@ type LogglyEntry struct {
 	}
 	Response struct {
 		Body     interface{}
+		Header   http.Header
 		Status   int
 		Duration int64
 	}
@@ -88,6 +89,13 @@ func (le *LogglyEntry) SetResponse(status int, body interface{}) {
 	}
 	le.Response.Status = status
 	le.Response.Duration = time.Since(le.startTime).Nanoseconds() / 1000000 //1 ms = 1000000ns
+}
+
+func (le *LogglyEntry) SetRequestID(id string) {
+	if le.Response.Header == nil {
+		le.Response.Header = http.Header{}
+	}
+	le.Response.Header.Add("X-Request-Id", id)
 }
 
 func (le *LogglyEntry) SetProductType(pt string) {
